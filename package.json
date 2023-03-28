@@ -1,5 +1,6 @@
 {
   "name": "pokedex",
+  "homepage": "https://incodenet.github.io/pokedex",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -27,7 +28,8 @@
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts --ext .tsx src/.",
     "lint:fix": "eslint --fix --ext .ts --ext .tsx src/.",
-    "deploy-github": "gh-pages -d build"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
