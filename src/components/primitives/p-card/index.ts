@@ -1,1 +1,1 @@
-export {PCard} from './p-card';
+export {PCardMemoized as PCard} from './p-card';

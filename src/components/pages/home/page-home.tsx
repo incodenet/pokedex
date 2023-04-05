@@ -19,11 +19,17 @@ import {
 import {Button, Col, Input, Row, Select, Typography} from 'antd';
 import {NameAndUrl, Pokemon} from 'types/api';
 import {DEFAULT_OFFSET_SIZE, DEFAULT_PAGING_SIZE} from 'constants/common';
+import {useDispatch, useSelector} from 'react-redux';
+import {appLoadingSelector, appPokeCountSelector, appPokedexSelector} from 'store/app/selectors';
+import {getPokedexAction} from 'store/app/actions';
 
 const {Text} = Typography;
 
 export const PageHome = () => {
-  const [loading, setLoading] = useState(true);
+  const loading = useSelector(appLoadingSelector);
+  const pokedex = useSelector(appPokedexSelector);
+  const pokeCount = useSelector(appPokeCountSelector);
+  const dispatch = useDispatch();
 
   const [pagingSize, setPagingSize] = useState<number>(DEFAULT_PAGING_SIZE);
   const [pagingMaxSize, setPagingMaxSize] = useState<number>();
@@ -38,36 +44,24 @@ export const PageHome = () => {
 
   const [filterState, setFilterState] = useState({
     name: '',
-    status: '',
     species: '',
     type: '',
-    gender: '',
   });
 
-  const initializeCount = useRef(0);
+  const getPokes = useRef(true);
 
   useEffect(() => {
-    if (initializeCount.current !== 0) return;
+    if (pokedex.length === 0) dispatch(getPokedexAction());
 
-    (async () => {
-      try {
-        const {data} = await getPokedexService();
+    setPagingMaxSize(Math.ceil(pokeCount / pagingSize));
 
-        setPagingMaxSize(Math.ceil(data.count / pagingSize));
-
-        setPokemons([]);
-        getPokemons(data?.results);
-
-        setTimeout(() => setLoading(false), 400);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-
-    initializeCount.current++;
-  }, []);
+    setPokemons([]);
+    getPokemons(pokedex);
+  }, [pokedex]);
 
   const getPokemons = useCallback(async (res: NameAndUrl[]) => {
+    if (!getPokes.current) return;
+
     res.map(async (item: NameAndUrl) => {
       try {
         const {data} = await getPokemonsService(item.url!);
@@ -82,52 +76,41 @@ export const PageHome = () => {
       } catch (e) {
         console.error(e);
       }
+
+      getPokes.current = false;
     });
   }, []);
 
-  const handlePaginate = useCallback(
-    async (offset: number, limit: number) => {
-      setLoading(true);
+  // const handlePaginate = useCallback(
+  //   async (offset: number, limit: number) => {
+  //     try {
+  //       const {data} = await getPokedexService({offset, limit});
 
-      try {
-        const {data} = await getPokedexService({offset, limit});
+  //       setPokemons([]);
+  //       getPokemons(data?.results);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   },
+  //   [offsetSize]
+  // );
 
-        setPokemons([]);
-        getPokemons(data?.results);
-
-        setTimeout(() => setLoading(false), 400);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [offsetSize]
-  );
-
-  useEffect(() => {
-    handlePaginate(offsetSize, pagingSize);
-  }, [offsetSize]);
+  // useEffect(() => {
+  //   handlePaginate(offsetSize, pagingSize);
+  // }, [offsetSize]);
 
   const handlePagingSizeChange = useCallback(async (size: number) => {
-    setLoading(true);
     setPagingSize(size);
 
-    try {
-      const {data} = await getPokedexService({offset: offsetSize, limit: size});
+    dispatch(getPokedexAction({limit: size}));
 
-      setPokemons([]);
-      getPokemons(data?.results);
+    setPagingMaxSize(Math.ceil(pokeCount / pagingSize));
 
-      setTimeout(() => setLoading(false), 400);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    setPokemons([]);
+    getPokemons(pokedex);
   }, []);
 
-  const handleFilterSubmit = async ({name, value}: {name: string; value: string}) => {
+  const handleFilterSubmit = ({name, value}: {name: string; value: string}) => {
     setFilterState({...filterState, [name]: value});
   };
 
@@ -165,20 +148,6 @@ export const PageHome = () => {
                   placeholder="Type"
                   onChange={e => {
                     handleFilterSubmit({name: 'type', value: e.target.value});
-                  }}
-                />
-                <Select
-                  placeholder="Status"
-                  // options={STATUS_OPTIONS}
-                  onChange={e => {
-                    handleFilterSubmit({name: 'status', value: e.target.value!});
-                  }}
-                />
-                <Select
-                  placeholder="Gender"
-                  // options={GENDER_OPTIONS}
-                  onChange={e => {
-                    handleFilterSubmit({name: 'gender', value: e.target.value!});
                   }}
                 />
               </div>

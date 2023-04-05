@@ -45,22 +45,17 @@ export const title = css({
   },
 });
 
-export const status = css({
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: '100%',
-  height: '3px',
+export const typesWrapper = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '10px',
+  marginBottom: '15px',
+});
 
-  '&.status-dead': {
-    backgroundColor: '#E43F5A',
-  },
-
-  '&.status-alive': {
-    backgroundColor: 'green',
-  },
-
-  '&.status-unknown': {
-    backgroundColor: 'grey',
-  },
+export const badge = css({
+  borderRadius: '5px',
+  fontSize: '13px',
+  padding: '0 4px',
+  border: '1px solid',
 });
